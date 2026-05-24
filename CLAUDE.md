@@ -1,3 +1,9 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+---
+
 # MazyOS — Sistema operacional do negócio
 
 Sua empresa roda em cima desse arquivo. Aqui ficam as regras de operação
@@ -113,3 +119,78 @@ Quando o usuário pedir skill nova:
 4. Se a skill precisar de arquivos de apoio (templates, exemplos),
    criar dentro da pasta da skill
 5. Seguir o fluxo da skill-creator nativa do Claude Code
+
+---
+
+## Arquitetura do sistema
+
+### Estrutura de diretórios
+
+```
+_memoria/          ← cérebro do negócio (lido antes de qualquer resposta)
+  empresa.md       ← nome, o que faz, clientes, equipe, ferramentas
+  preferencias.md  ← tom de voz, o que evitar, estilo de escrita
+  estrategia.md    ← foco atual, gargalos, prioridades
+
+identidade/
+  design-guide.md  ← cores, tipografia, logo — toda skill visual lê aqui antes de gerar
+
+.claude/skills/    ← skills locais do projeto (cada pasta = uma skill com SKILL.md)
+
+marketing/         ← outputs de conteúdo e SEO
+saidas/            ← entregáveis finais (propostas, relatórios, carrosséis)
+dados/             ← inputs brutos (CSVs, exports, PDFs pra análise)
+scripts/           ← automações e scripts de suporte
+
+templates/
+  perfis/          ← templates de CLAUDE.md por perfil (solopreneur, freelancer, agência, empresa)
+  identidade/      ← exemplos de design-guide.md por perfil
+  skills/          ← catálogo de skills externas disponíveis pra instalar
+  ferramentas/     ← catálogo de ferramentas externas compatíveis
+```
+
+### Skills disponíveis (`.claude/skills/`)
+
+| Skill | Comando | O que faz |
+|---|---|---|
+| instalar | `/instalar` | Setup inicial: entrevista o usuário, preenche `_memoria/` e adapta o `CLAUDE.md` pro perfil |
+| abrir | `/abrir` | Carrega contexto da sessão lendo os 3 arquivos de `_memoria/` e devolve resumo de 5 linhas |
+| salvar | `/salvar` | Commit + push no GitHub; na primeira vez configura o remote |
+| atualizar | `/atualizar` | Varre o workspace e propõe atualizações nos arquivos de `_memoria/` que ficaram defasados |
+| carrossel | `/carrossel` | Gera carrossel 1080×1350 em HTML com identidade visual do `design-guide.md` |
+| publicar-tema | `/publicar-tema` | Dado um tema: gera artigo de blog + carrossel + 3 legendas amarradas |
+| seo | `/seo` | Fluxo completo de 8 passos (demanda → concorrência → GMB → on-page → conteúdo → ads → monitoramento → GEO); salva outputs em `marketing/seo/` |
+| anuncio-google | `/anuncio-google` | Monta campanha de Google Ads em CSV pronto pra importar no Editor |
+| relatorio-ads | `/relatorio-ads` | Lê exports de Google Ads + Meta e gera relatório semanal com alertas |
+| responder-avaliacoes | `/responder-avaliacoes` | Escreve respostas humanas pras reviews do Google no tom da marca |
+| aprovar-post | `/aprovar-post` | Publica blog + Instagram + Facebook num comando |
+| analisar-dados | `/analisar-dados` | Lê CSV/XLSX/PDF e gera resumo executivo |
+| email-profissional | `/email-profissional` | Rascunha email a partir de contexto livre |
+| mapear-rotinas | `/mapear-rotinas` | Descobre o que o usuário repete e transforma em skill personalizada |
+| novo-projeto | `/novo-projeto` | Cria pasta isolada pra cada cliente ou iniciativa |
+
+### Como as skills se integram
+
+- Toda skill começa lendo `_memoria/empresa.md` + `_memoria/preferencias.md` pra calibrar tom e contexto
+- Skills visuais (`/carrossel`, `/publicar-tema`) leem `identidade/design-guide.md` antes de gerar qualquer HTML
+- `/seo` (passo 5) alimenta `/publicar-tema`; `/seo` (passo 6) alimenta `/anuncio-google`
+- Outputs persistem em `marketing/`, `saidas/` ou subpastas específicas — nunca sobrescrever sem confirmar
+- Skills novas criadas pelo usuário vão em `.claude/skills/<nome>/SKILL.md` (local) ou `~/.claude/skills/<nome>/SKILL.md` (global)
+
+---
+
+## Perfil do operador — João (Freelancer)
+
+**Quem sou:** João, freelancer de criação e venda de sites. Trabalho solo com pequenos negócios e lojas locais.
+
+**O que entrego:** Sites completos em HTML/CSS/JS — do briefing à entrega ao cliente.
+
+**Clientes ativos:**
+- LSSTORE — loja de roupas (masculino e feminino, público 20-40 anos). Site pronto em `index.html`.
+
+**Como trabalho:** Crio o site, apresento ao cliente e fecho a venda. Foco em automatizar o que for repetitivo.
+
+**Regras do sistema:**
+- Cliente novo → criar pasta `clientes/<Nome>/` com `briefing.md`
+- Proposta → `clientes/<Nome>/proposta.html`
+- Site entregue → mover para `saidas/<Nome>/`

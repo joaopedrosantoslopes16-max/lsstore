@@ -1,0 +1,1403 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LS STORE v20</title>
+<link href="fonts/inter.css" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+body:not(.loaded) *{transition-duration:0s!important;transition-delay:0s!important;animation-duration:0s!important}
+html,body{width:100%;height:100%;overflow-x:hidden;background:#000;font-family:'Inter','Helvetica Neue',Helvetica,Arial,sans-serif;font-weight:100}
+body{overflow-y:auto;height:auto}
+
+/* ── NAV ─────────────────────────────────────── */
+nav{position:fixed;top:0;left:0;right:0;z-index:600;display:flex;align-items:center;justify-content:space-between;padding:26px 52px}
+.logo{font-family:'Inter','Helvetica Neue',Helvetica,Arial,sans-serif;font-weight:300;font-size:15px;letter-spacing:8px;text-transform:uppercase;color:#fff;text-shadow:0 2px 20px rgba(0,0,0,.9);position:absolute;left:50%;top:50%;transform:translateX(-50%) translateY(-50%);pointer-events:none}
+.nav-links{display:none}
+.nav-left,.nav-right{display:flex;gap:8px;align-items:center}
+.nav-actions{display:flex;gap:8px}
+.nav-btn{width:38px;height:38px;border:1px solid rgba(255,255,255,.28);border-radius:50%;background:rgba(0,0,0,.4);backdrop-filter:blur(10px);cursor:pointer;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;transition:border-color .2s,background .2s}
+.nav-btn:hover{border-color:rgba(255,255,255,.7);background:rgba(255,255,255,.1)}
+
+/* ── STAGE ───────────────────────────────────── */
+.stage{position:fixed;inset:0;overflow:hidden}
+
+/* ── BACKGROUNDS ─────────────────────────────── */
+.bg{position:absolute;inset:0;opacity:0;transition:opacity 2s cubic-bezier(.4,0,.2,1);pointer-events:none}
+.bg.on{opacity:1}
+.bg-sky  {background:linear-gradient(180deg,#1b7fc4 0%,#3fa8e8 15%,#72c6f5 32%,#a8dcfa 50%,#c8ecff 68%,#dff4ff 82%,#edf9ff 92%,#f4fbff 100%)}
+.bg-night{background:linear-gradient(180deg,#000008 0%,#010118 20%,#020230 42%,#040428 65%,#060618 85%,#040410 100%)}
+.bg-fire {background:linear-gradient(180deg,#040000 0%,#110100 15%,#2e0600 30%,#601200 48%,#9e2400 65%,#cc3c00 80%,#df5200 92%,#e86800 100%)}
+
+/* ── GIANT WORD — fixo ───────────────────────── */
+.word{
+  position:absolute;right:20px;bottom:65px;z-index:18;
+  font-family:'Inter','Helvetica Neue',Helvetica,Arial,sans-serif;
+  font-weight:200;
+  font-size:clamp(52px,8vw,144px);
+  line-height:.88;letter-spacing:-1px;text-transform:uppercase;text-align:right;
+  pointer-events:none;user-select:none;
+  color:#fff;text-shadow:0 2px 16px rgba(0,0,0,.5);
+}
+.w-fade{
+  display:inline-block;
+  -webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 50%,transparent 100%);
+  mask-image:linear-gradient(to bottom,#000 0%,#000 50%,transparent 100%);
+}
+
+/* ── CANVAS z:10 ─────────────────────────────── */
+#fx{position:absolute;inset:0;width:100%;height:100%;z-index:10;pointer-events:none}
+
+/* ── LIGHTS z:11 ─────────────────────────────── */
+.light{position:absolute;inset:0;z-index:11;pointer-events:none;opacity:0;transition:opacity 2s cubic-bezier(.4,0,.2,1)}
+.light.on{opacity:1}
+.l-sky  {background:radial-gradient(ellipse at 78% 6%,rgba(255,238,180,.5) 0%,rgba(255,210,100,.14) 28%,transparent 55%)}
+.l-night{background:radial-gradient(ellipse at 76% 10%,rgba(190,170,255,.28) 0%,rgba(100,80,255,.07) 38%,transparent 62%)}
+.l-fire {background:radial-gradient(ellipse at 50% 102%,rgba(255,120,0,.65) 0%,rgba(200,50,0,.35) 28%,rgba(120,15,0,.12) 52%,transparent 72%)}
+
+/* ── SHADES ───────────────────────────────────── */
+.top-shade{position:absolute;top:0;left:0;right:0;height:220px;z-index:12;pointer-events:none;background:linear-gradient(to bottom,rgba(0,0,0,.55) 0%,transparent 100%)}
+.bot-shade{position:absolute;bottom:0;left:0;right:0;height:65%;z-index:17;pointer-events:none;background:linear-gradient(to top,rgba(0,0,0,.95) 0%,rgba(0,0,0,.6) 28%,rgba(0,0,0,.15) 60%,transparent 100%)}
+.vignette{position:absolute;inset:0;z-index:12;pointer-events:none;background:radial-gradient(ellipse at 50% 50%,transparent 38%,rgba(0,0,0,.22) 68%,rgba(0,0,0,.62) 100%)}
+
+/* ── MODELS — z:15 ───────────────────────────── */
+.model{
+  position:absolute;top:85px;left:50%;
+  height:155%;width:auto;max-width:100%;
+  object-fit:contain;object-position:top center;
+  z-index:15;opacity:0;
+  transition:opacity 1.8s cubic-bezier(.4,0,.2,1),filter 2s cubic-bezier(.4,0,.2,1);
+  animation:levitate 7s ease-in-out infinite;
+}
+.model.on{opacity:1}
+@keyframes levitate{
+  0%,100%{transform:translateX(-50%) translateY(0)}
+  50%    {transform:translateX(-50%) translateY(-12px)}
+}
+.model-sky  {filter:brightness(1.06) contrast(1.02) saturate(1.0)  drop-shadow(0 0 60px rgba(80,160,255,.2))}
+.model-night{filter:brightness(.88)  contrast(1.12) saturate(.82)  drop-shadow(0 0 70px rgba(80,60,255,.45));top:auto;bottom:0;height:calc(100% - 90px);max-width:72%;object-position:bottom center}
+.model-fire {filter:brightness(.87)  contrast(1.18) saturate(1.25) sepia(.12) drop-shadow(0 0 80px rgba(220,80,0,.6))}
+
+/* ── CONTENT — fast exit, slow enter ─────────── */
+.content{
+  position:absolute;left:52px;bottom:72px;z-index:20;max-width:350px;
+  opacity:0;transform:translateY(24px);
+  transition:opacity .4s 0s, transform .4s 0s ease-in;
+  pointer-events:none;
+}
+.content.on{
+  opacity:1;transform:translateY(0);pointer-events:all;
+  transition:opacity 1.2s .55s, transform 1.2s .55s cubic-bezier(.22,1,.36,1);
+}
+.c-tag{display:inline-block;font-size:10px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.48);margin-bottom:12px}
+.c-head{font-size:clamp(12px,1.1vw,18px);font-weight:200;line-height:1.6;color:rgba(255,255,255,.9);margin-bottom:28px;max-width:340px;letter-spacing:.3px}
+.c-btns{display:flex;gap:12px;flex-wrap:wrap}
+.btn-fill{padding:13px 30px;font-family:'Inter','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;border:none;cursor:pointer;transition:transform .14s,filter .14s}
+.btn-fill:hover{transform:translateY(-2px);filter:brightness(1.18)}
+.btn-line{padding:12px 30px;font-family:'Inter','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:11px;font-weight:400;letter-spacing:2px;text-transform:uppercase;background:transparent;color:rgba(255,255,255,.72);border:1px solid rgba(255,255,255,.28);cursor:pointer;transition:border-color .2s,color .2s}
+.btn-line:hover{border-color:rgba(255,255,255,.85);color:#fff}
+
+/* ── HEADLINE — top-left (fixo) ─────────────── */
+.headline{
+  position:absolute;left:75px;top:90px;z-index:14;
+  font-family:'Inter','Helvetica Neue',Helvetica,Arial,sans-serif;
+  font-weight:200;
+  font-size:clamp(64px,9.6vw,176px);
+  line-height:.88;letter-spacing:-1px;text-transform:uppercase;color:#fff;
+  text-shadow:0 2px 16px rgba(0,0,0,.5);
+  pointer-events:none;user-select:none;
+}
+.hl-sub,.w-sub{
+  display:block;font-family:'Inter','Helvetica Neue',Helvetica,Arial,sans-serif;
+  font-size:clamp(11px,1vw,16px);font-weight:200;
+  letter-spacing:3px;text-transform:uppercase;
+  color:#fff;margin-top:8px;margin-left:0;padding-left:0;line-height:1.2;
+  text-shadow:0 2px 16px rgba(0,0,0,.5);
+}
+.hl-sub{text-align:left;}
+
+/* ── STATS — right (fixo) ────────────────────── */
+.stats{
+  position:absolute;right:52px;top:112px;z-index:20;
+  text-align:left;pointer-events:none;
+}
+.stat-item{margin-bottom:28px}
+.stat-item:last-child{margin-bottom:0}
+.stat-num{font-family:'Inter','Helvetica Neue',Helvetica,Arial,sans-serif;font-weight:200;font-size:clamp(21px,1.6vw,38px);letter-spacing:-1px;color:#fff;line-height:1;text-shadow:0 1px 10px rgba(0,0,0,.5)}
+.stat-desc{font-size:clamp(12px,0.8vw,14px);font-weight:300;letter-spacing:.2px;color:rgba(255,255,255,.5);max-width:220px;line-height:1.55;margin-top:6px}
+
+/* ── DISCOVER BUTTON ─────────────────────────── */
+.btn-discover{
+  display:inline-flex;align-items:center;gap:14px;
+  background:transparent;border:none;cursor:pointer;padding:0;
+  color:rgba(255,255,255,.85);font-family:'Inter','Helvetica Neue',Helvetica,Arial,sans-serif;
+  font-size:12px;font-weight:100;letter-spacing:1.5px;text-transform:uppercase;
+  transition:color .2s;
+}
+.btn-discover:hover{color:#fff;}
+.disc-icon{
+  width:44px;height:44px;border:1px solid rgba(255,255,255,.45);border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:15px;transition:background .2s,border-color .2s;flex-shrink:0;
+}
+.btn-discover:hover .disc-icon{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.9);}
+
+/* ── FLASH ───────────────────────────────────── */
+.flash{position:fixed;inset:0;z-index:45;background:#000;opacity:0;pointer-events:none}
+
+/* ── UI ──────────────────────────────────────── */
+.dots{position:fixed;bottom:32px;left:52px;z-index:600;display:flex;align-items:center;gap:8px}
+.dot{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.3);cursor:pointer;transition:all .45s cubic-bezier(.22,1,.36,1)}
+.dot.on{background:#fff;width:26px;border-radius:3px}
+.env-lbl{position:fixed;bottom:26px;right:52px;z-index:600;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.33)}
+.prog{position:fixed;bottom:0;left:0;height:2px;background:rgba(255,255,255,.58);z-index:600;width:0%}
+.arrow{display:none}
+.arrow:hover{border-color:rgba(255,255,255,.65);background:rgba(255,255,255,.1)}
+#al{left:20px}#ar{right:20px}
+
+/* ── PAGE-1 UI FADE ON SCROLL ────────────────── */
+.page1-ui{transition:opacity .6s cubic-bezier(.4,0,.2,1)}
+
+/* ── BRANDS SECTION ──────────────────────────── */
+.pin-brands{
+  margin-top:100vh;
+  height:200vh;
+  position:relative;
+}
+.brands-section{
+  position:sticky;top:0;z-index:50;
+  height:100vh;overflow:hidden;
+  background:#000;
+  display:flex;align-items:center;
+  padding:0 52px;
+  border-top:1px solid rgba(255,255,255,.1);
+}
+.brands-inner{
+  display:flex;align-items:center;gap:80px;
+  width:100%;max-width:1400px;margin:0 auto;
+  padding:80px 0;
+}
+.brands-left{flex:0 0 36%;min-width:0}
+.brands-sup{
+  display:block;font-size:10px;font-weight:600;letter-spacing:3px;text-transform:uppercase;
+  color:rgba(255,255,255,.6);margin-bottom:22px;
+}
+.brands-heading{
+  font-family:'Inter','Helvetica Neue',Helvetica,Arial,sans-serif;
+  font-weight:200;font-size:clamp(54px,6.5vw,120px);
+  line-height:.88;letter-spacing:-1px;text-transform:uppercase;color:#fff;
+  margin-bottom:36px;
+}
+.bh-line{
+  display:inline-block;
+  -webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 55%,transparent 100%);
+  mask-image:linear-gradient(to bottom,#000 0%,#000 55%,transparent 100%);
+}
+.brands-sub{
+  font-size:clamp(13px,1vw,16px);font-weight:200;line-height:1.8;
+  color:rgba(255,255,255,.75);letter-spacing:.3px;max-width:300px;
+}
+.brands-count{
+  display:block;margin-top:40px;padding-top:32px;
+  border-top:1px solid rgba(255,255,255,.14);
+  font-size:10px;font-weight:600;letter-spacing:3px;
+  text-transform:uppercase;color:rgba(255,255,255,.48);
+}
+
+/* ── FADE-UP ANIMATION ───────────────────────── */
+.fu{opacity:0;transform:translateY(28px);transition:opacity .9s cubic-bezier(.22,1,.36,1),transform .9s cubic-bezier(.22,1,.36,1)}
+.fu.vis{opacity:1;transform:translateY(0)}
+.fu:nth-child(2){transition-delay:.12s}
+.fu:nth-child(3){transition-delay:.22s}
+.fu:nth-child(4){transition-delay:.32s}
+.brand-card.fu{transition:opacity .7s cubic-bezier(.22,1,.36,1),transform .7s cubic-bezier(.22,1,.36,1),background .35s}
+.brand-card.fu:nth-child(1){transition-delay:.1s}
+.brand-card.fu:nth-child(2){transition-delay:.2s}
+.brand-card.fu:nth-child(3){transition-delay:.28s}
+.brand-card.fu:nth-child(4){transition-delay:.36s}
+.brands-right{flex:1;min-width:0}
+.brands-grid{
+  display:grid;grid-template-columns:repeat(2,1fr);
+  gap:1px;background:rgba(255,255,255,.09);
+}
+.brand-card{
+  background:#000;aspect-ratio:16/9;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;
+  padding:40px;cursor:pointer;position:relative;overflow:hidden;
+  transition:background .35s;
+}
+.brand-card::after{
+  content:'';position:absolute;inset:0;
+  background:rgba(255,255,255,.035);opacity:0;
+  transition:opacity .35s;
+}
+.brand-card:hover::after{opacity:1}
+.brand-card::before{
+  content:'';position:absolute;
+  top:0;left:-120%;
+  width:60%;height:100%;
+  background:linear-gradient(105deg,transparent 15%,rgba(255,255,255,.38) 50%,transparent 85%);
+  transform:skewX(-15deg);
+  pointer-events:none;z-index:2;
+}
+.brand-card:hover::before{
+  animation:cardShine 1.1s cubic-bezier(.25,.46,.45,.94) forwards;
+}
+@keyframes cardShine{
+  0%  {left:-120%}
+  100%{left:160%}
+}
+.brand-card img{
+  max-width:150px;max-height:58px;object-fit:contain;
+  filter:brightness(0) invert(1);opacity:.58;
+  transition:opacity .35s,transform .45s cubic-bezier(.22,1,.36,1);
+  position:relative;z-index:1;
+}
+.brand-card:hover img{opacity:1;transform:scale(1.07)}
+.brand-lbl{
+  font-size:9px;font-weight:600;letter-spacing:3px;text-transform:uppercase;
+  color:rgba(255,255,255,.18);position:relative;z-index:1;
+  transition:color .35s;
+}
+.brand-card:hover .brand-lbl{color:rgba(255,255,255,.5)}
+
+/* ── PRODUCTS SECTION ────────────────────────── */
+.products-section{
+  position:relative;z-index:51;
+  background:#141414;
+  padding:0 52px 100px;
+  border-top:1px solid rgba(255,255,255,.08);
+  margin-top:-100vh;
+}
+.prod-bar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:40px 0 32px;
+  border-bottom:1px solid rgba(255,255,255,.1);
+  margin-bottom:24px;
+}
+.prod-filters{display:flex;gap:2px}
+.pf-btn{
+  padding:10px 22px;
+  font-family:'Inter','Helvetica Neue',Helvetica,Arial,sans-serif;
+  font-size:11px;font-weight:400;letter-spacing:2px;text-transform:uppercase;
+  background:transparent;color:rgba(255,255,255,.42);
+  border:1px solid transparent;cursor:pointer;
+  transition:color .2s,background .2s,border-color .2s;
+}
+.pf-btn:hover{color:rgba(255,255,255,.8)}
+.pf-btn.pf-active{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.18);color:#fff}
+.prod-sort{display:flex;gap:8px}
+.ps-btn{
+  display:flex;align-items:center;gap:9px;
+  padding:10px 20px;
+  font-family:'Inter','Helvetica Neue',Helvetica,Arial,sans-serif;
+  font-size:11px;font-weight:400;letter-spacing:2px;text-transform:uppercase;
+  background:transparent;color:rgba(255,255,255,.42);
+  border:1px solid rgba(255,255,255,.14);cursor:pointer;
+  transition:color .2s,border-color .2s;
+}
+.ps-btn:hover{color:#fff;border-color:rgba(255,255,255,.45)}
+.prod-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:18px;
+}
+.prod-card{
+  position:relative;overflow:hidden;cursor:pointer;
+  background:#1e1e1e;border-radius:4px;
+}
+.pc-img{position:relative;aspect-ratio:3/4;overflow:hidden}
+.pc-img img{
+  width:100%;height:100%;object-fit:cover;object-position:top center;display:block;
+  transition:transform .75s cubic-bezier(.22,1,.36,1);
+}
+.prod-card:hover .pc-img img{transform:scale(1.05)}
+.pc-cart{
+  position:absolute;top:50%;left:50%;
+  transform:translate(-50%,-50%) translateY(14px);
+  opacity:0;
+  padding:14px 34px;
+  font-family:'Inter','Helvetica Neue',Helvetica,Arial,sans-serif;
+  font-size:10px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;
+  background:#fff;color:#000;border:none;cursor:pointer;white-space:nowrap;z-index:3;
+  transition:opacity .3s,transform .38s cubic-bezier(.22,1,.36,1);
+}
+.prod-card:hover .pc-cart{opacity:1;transform:translate(-50%,-50%) translateY(0)}
+.pc-info{
+  position:absolute;bottom:0;left:0;right:0;
+  padding:60px 16px 18px;
+  background:linear-gradient(to top,rgba(0,0,0,.92) 0%,rgba(0,0,0,.5) 50%,transparent 100%);
+  display:flex;align-items:flex-end;justify-content:space-between;gap:12px;
+  pointer-events:none;
+}
+.pc-left{display:flex;flex-direction:column;gap:4px}
+.pc-name{font-size:13px;font-weight:300;letter-spacing:.4px;color:#fff;line-height:1.2}
+.pc-sub{font-size:10px;font-weight:400;letter-spacing:1.8px;text-transform:uppercase;color:rgba(255,255,255,.48)}
+.pc-price{font-size:16px;font-weight:200;letter-spacing:-.5px;color:#fff;white-space:nowrap;flex-shrink:0}
+.pc-style{
+  position:absolute;top:14px;left:14px;z-index:2;
+  font-size:9px;font-weight:600;letter-spacing:2px;text-transform:uppercase;
+  color:rgba(255,255,255,.8);
+  background:rgba(0,0,0,.55);backdrop-filter:blur(8px);
+  padding:5px 12px;
+}
+.pc-img img.flatlay{object-fit:contain;object-position:center;background:#0d0d0d;padding:10px}
+
+/* ── EDITORIAL SECTION ───────────────────────── */
+.editorial-section{
+  background:#080808;
+  padding:100px 52px 140px;
+  position:relative;z-index:52;
+}
+/* wrapper fora do card — modelo se ancora aqui, não no card */
+.editorial-wrap{
+  position:relative;
+  max-width:1400px;margin:0 auto;
+}
+.editorial-card{
+  position:relative;
+  border-radius:20px;
+  overflow:hidden;
+  min-height:460px;
+  border:1px solid rgba(255,255,255,.07);
+  background:#111;
+}
+/* fundo vermelho escuro de estúdio */
+.ed-card-photo{
+  position:absolute;inset:0;z-index:1;
+  background:
+    radial-gradient(ellipse 75% 65% at 50% 62%,#8a1212 0%,#5c0808 28%,#350505 58%,#1a0202 100%),
+    radial-gradient(ellipse 45% 40% at 52% 58%,#a81818 0%,transparent 70%);
+  background-blend-mode:screen;
+}
+/* camada de texto */
+.editorial-text{
+  position:absolute;inset:0;
+  z-index:4;
+  padding:52px 60px 52px 60px;
+  display:flex;flex-direction:column;justify-content:flex-end;
+  background:linear-gradient(to right,rgba(0,0,0,.4) 32%,transparent 62%);
+}
+/* ícones globo + seta — topo esquerdo */
+.ed-icons{
+  position:absolute;top:44px;left:60px;
+  display:flex;gap:10px;
+}
+.ed-icon-btn{
+  width:44px;height:44px;border-radius:50%;border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:transform .18s,filter .18s;
+}
+.ed-icon-btn:hover{transform:scale(1.08);filter:brightness(1.18)}
+.ed-icon-globe{background:#4361EE;color:#fff}
+.ed-icon-arrow{background:rgba(255,255,255,.14);color:rgba(255,255,255,.8);font-size:15px}
+/* headline grande — camada de fundo */
+.ed-headline{
+  font-family:'Inter','Helvetica Neue',Helvetica,Arial,sans-serif;
+  font-weight:200;font-size:clamp(30px,3.4vw,58px);
+  line-height:.92;letter-spacing:-1px;text-transform:uppercase;
+  color:#fff;margin-bottom:28px;
+  max-width:48%;
+  text-shadow:0 2px 22px rgba(0,0,0,.7);
+}
+.ed-tags{display:flex;gap:8px;flex-wrap:wrap}
+.ed-tag{
+  padding:8px 16px;font-size:10px;font-weight:400;letter-spacing:1.5px;
+  color:rgba(255,255,255,.45);border:1px solid rgba(255,255,255,.13);
+  border-radius:3px;cursor:default;
+  transition:border-color .2s,color .2s;
+}
+.ed-tag:hover{color:rgba(255,255,255,.85);border-color:rgba(255,255,255,.38)}
+/* grid sutil no fundo do card */
+.ed-grid{
+  position:absolute;inset:0;z-index:2;pointer-events:none;
+  background-image:
+    linear-gradient(rgba(255,255,255,.09) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,.09) 1px,transparent 1px);
+  background-size:72px 72px;
+}
+/* halo escuro sobre a foto vermelha pra dar profundidade */
+.ed-halo{
+  position:absolute;inset:0;
+  pointer-events:none;z-index:3;
+  background:
+    linear-gradient(to right,rgba(0,0,0,.28) 0%,rgba(0,0,0,.06) 50%,transparent 100%),
+    linear-gradient(to top,rgba(0,0,0,.18) 0%,transparent 40%);
+}
+/* PNG 20 — deslocado para direita, 3D: cabeça fora / caixas coladas ao fundo */
+.editorial-model{
+  position:absolute;
+  left:62%;
+  transform:translateX(-50%);
+  top:-180px;
+  bottom:0;             /* container termina exato na borda do card */
+  width:72%;
+  z-index:10;
+  pointer-events:none;
+}
+.editorial-model img{
+  width:100%;height:100%;
+  object-fit:contain;
+  object-position:center bottom; /* ancora caixas na base do container */
+  display:block;
+  filter:contrast(1.1) brightness(1.05) saturate(1.08);
+  mix-blend-mode:screen;
+}
+
+/* ── LOOKS CAROUSEL ─────────────────────────── */
+.looks-section{
+  background:#0a0a0a;padding:100px 0 120px;
+  position:relative;z-index:53;overflow:hidden;
+}
+.looks-header{
+  padding:0 52px;display:flex;align-items:flex-end;
+  justify-content:space-between;margin-bottom:52px;
+}
+.looks-sup{
+  display:block;font-size:10px;font-weight:600;letter-spacing:3px;
+  text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:18px;
+}
+.looks-title{
+  font-family:'Inter','Helvetica Neue',Helvetica,Arial,sans-serif;
+  font-weight:200;font-size:clamp(48px,6vw,110px);
+  line-height:.88;letter-spacing:-1px;text-transform:uppercase;color:#fff;
+}
+.looks-nav{display:flex;gap:8px;align-self:flex-end}
+.lk-arrow{
+  width:48px;height:48px;border-radius:50%;
+  border:1px solid rgba(255,255,255,.25);
+  background:transparent;color:#fff;font-size:16px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:border-color .2s,background .2s;
+}
+.lk-arrow:hover{border-color:rgba(255,255,255,.8);background:rgba(255,255,255,.08)}
+.looks-track-wrap{overflow:hidden;padding:0 52px}
+.looks-track{display:flex;gap:16px;width:max-content}
+.lk-pair{
+  width:640px;height:480px;
+  display:flex;border-radius:12px;overflow:hidden;
+  border:1px solid rgba(255,255,255,.08);flex-shrink:0;
+  transform:translateZ(0);
+  backface-visibility:hidden;
+  -webkit-backface-visibility:hidden;
+}
+.lk-card{flex-shrink:0;border-radius:12px;overflow:hidden;position:relative}
+.lk-pair-img{
+  width:260px;flex-shrink:0;position:relative;
+}
+.lk-pair-img img{
+  width:100%;height:100%;object-fit:cover;object-position:top center;display:block;
+}
+.lk-photo-info{
+  position:absolute;bottom:0;left:0;right:0;
+  padding:60px 20px 22px;
+  background:linear-gradient(to top,rgba(0,0,0,.82) 0%,transparent 100%);
+  display:flex;flex-direction:column;gap:5px;pointer-events:none;
+}
+.lk-photo-name{font-size:14px;font-weight:300;letter-spacing:.4px;color:#fff;line-height:1.2}
+.lk-photo-tag{font-size:9px;font-weight:600;letter-spacing:2.5px;text-transform:uppercase;color:rgba(255,255,255,.48)}
+.lk-pair-text{
+  flex:1;background:#141414;
+  padding:48px 40px;
+  display:flex;flex-direction:column;justify-content:space-between;
+}
+.lk-stars{font-size:17px;letter-spacing:4px;color:#fff;margin-bottom:28px}
+.lk-quote{
+  font-size:clamp(16px,1.3vw,20px);font-weight:200;
+  line-height:1.65;color:rgba(255,255,255,.88);letter-spacing:.2px;flex:1;
+}
+.lk-author{
+  margin-top:40px;padding-top:24px;
+  border-top:1px solid rgba(255,255,255,.1);
+}
+.lk-name{display:block;font-size:13px;font-weight:400;letter-spacing:.5px;color:#fff}
+.lk-coll{
+  display:block;font-size:10px;font-weight:400;letter-spacing:2px;
+  text-transform:uppercase;color:rgba(255,255,255,.38);margin-top:5px;
+}
+
+/* ── FOOTER ──────────────────────────────────── */
+.site-footer{
+  background:#0a0a0a;position:relative;z-index:54;
+  overflow:hidden;
+}
+.footer-top{
+  display:flex;align-items:flex-start;justify-content:space-between;
+  padding:72px 52px 60px;
+}
+.footer-cols{display:flex;gap:80px}
+.footer-col-title{
+  display:block;font-size:10px;font-weight:600;letter-spacing:3px;
+  text-transform:uppercase;color:rgba(255,255,255,.9);margin-bottom:22px;
+}
+.footer-col ul{list-style:none}
+.footer-col ul li{margin-bottom:12px}
+.footer-col ul li a{
+  font-size:13px;font-weight:300;letter-spacing:.3px;
+  color:rgba(255,255,255,.42);text-decoration:none;
+  transition:color .2s;
+}
+.footer-col ul li a:hover{color:rgba(255,255,255,.9)}
+.footer-social{display:flex;gap:10px;align-items:center}
+.footer-social a{
+  width:52px;height:52px;border:1px solid rgba(255,255,255,.2);
+  display:flex;align-items:center;justify-content:center;
+  color:rgba(255,255,255,.7);text-decoration:none;font-size:17px;
+  transition:border-color .2s,color .2s;
+}
+.footer-social a:hover{border-color:rgba(255,255,255,.8);color:#fff}
+.footer-wordmark{
+  padding:0;
+  margin-top:-60px;
+  text-align:center;
+  font-family:'Inter','Helvetica Neue',Helvetica,Arial,sans-serif;
+  font-weight:700;
+  font-size:clamp(80px,14vw,220px);
+  line-height:.82;letter-spacing:-4px;text-transform:uppercase;
+  background:linear-gradient(to bottom,rgba(255,255,255,.08) 0%,rgba(255,255,255,.2) 100%);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  background-clip:text;
+  user-select:none;pointer-events:none;
+  white-space:nowrap;
+}
+.footer-bottom{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:20px 52px 28px;
+}
+.footer-copy{
+  font-size:10px;font-weight:400;letter-spacing:1.5px;
+  text-transform:uppercase;color:rgba(255,255,255,.22);
+}
+
+/* ── SCROLL INDICATOR ────────────────────────── */
+.scroll-hint{
+  position:fixed;bottom:40px;left:50%;transform:translateX(-50%);
+  display:flex;flex-direction:column;align-items:center;gap:10px;
+  color:rgba(255,255,255,.28);font-size:9px;font-weight:600;letter-spacing:3px;text-transform:uppercase;
+  pointer-events:none;z-index:600;
+}
+.scroll-arrow{
+  width:1px;height:48px;
+  background:linear-gradient(to bottom,rgba(255,255,255,.0),rgba(255,255,255,.45));
+  animation:scrollPulse 2s ease-in-out infinite;
+}
+@keyframes scrollPulse{0%,100%{opacity:.3;transform:scaleY(.6);transform-origin:top}50%{opacity:1;transform:scaleY(1);transform-origin:top}}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-left">
+    <button class="nav-btn" aria-label="Menu">
+      <svg width="16" height="11" viewBox="0 0 16 11" fill="none"><path d="M0 .75h16M0 5.5h16M0 10.25h16" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+    </button>
+    <button class="nav-btn" aria-label="Pesquisar">
+      <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><circle cx="6.5" cy="6.5" r="5.25" stroke="currentColor" stroke-width="1.4"/><path d="M10.5 10.5L14 14" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+    </button>
+  </div>
+  <div class="logo">LS STORE</div>
+  <div class="nav-right">
+    <button class="nav-btn" aria-label="Sacola">
+      <svg width="15" height="17" viewBox="0 0 15 17" fill="none"><rect x=".75" y="5.25" width="13.5" height="11" rx=".75" stroke="currentColor" stroke-width="1.4"/><path d="M5 7V4.5a2.5 2.5 0 0 1 5 0V7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+    </button>
+    <button class="nav-btn" aria-label="Conta">
+      <svg width="15" height="17" viewBox="0 0 15 17" fill="none"><circle cx="7.5" cy="5" r="4.25" stroke="currentColor" stroke-width="1.4"/><path d="M1 16.5c0-3.59 2.91-6.5 6.5-6.5s6.5 2.91 6.5 6.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+    </button>
+  </div>
+</nav>
+
+<div class="stage">
+  <div class="bg bg-sky   on"></div>
+  <div class="bg bg-night"></div>
+  <div class="bg bg-fire"></div>
+
+  <div class="word"><span class="w-fade">BUILT</span><br><span class="w-fade">TO STUN</span><span class="w-sub">Feito para surpreender</span></div>
+
+  <canvas id="fx"></canvas>
+
+  <div class="light l-sky   on"></div>
+  <div class="light l-night"></div>
+  <div class="light l-fire"></div>
+
+  <div class="top-shade"></div>
+  <div class="vignette"></div>
+  <div class="bot-shade"></div>
+
+  <img class="model model-sky   on" src="img/png%20das%20imagens/3.png?v=9" alt="">
+  <img class="model model-night"    src="img/png%20das%20imagens/1.png"     alt="">
+  <img class="model model-fire"     src="img/png%20das%20imagens/4.png?v=5" alt="">
+
+  <!-- Headline fixo — top-left -->
+  <div class="headline"><span class="w-fade">DRESSED</span><br><span class="w-fade">TO KILL</span><span class="hl-sub">Vestido para arrasar</span></div>
+
+  <!-- Stats fixo — right -->
+  <div class="stats">
+    <div class="stat-item">
+      <div class="stat-num">50K</div>
+      <div class="stat-desc">Clientes descobrindo seu estilo com a LS Store</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">90%</div>
+      <div class="stat-desc">Dos clientes se sentem mais confiantes com nossos looks</div>
+    </div>
+  </div>
+
+  <!-- Content — bottom-left -->
+  <div class="content on">
+    <p class="c-head">Eleve seu guarda-roupa com peças ousadas e modernas, criadas para chamar atenção. Cada look é feito para expressar confiança e estilo sem abrir mão de nada.</p>
+    <div class="c-btns">
+      <button class="btn-discover"><span class="disc-icon">↗</span>Descubra Agora</button>
+    </div>
+  </div>
+  <div class="content">
+    <p class="c-head">Eleve seu guarda-roupa com peças ousadas e modernas, criadas para chamar atenção. Cada look é feito para expressar confiança e estilo sem abrir mão de nada.</p>
+    <div class="c-btns">
+      <button class="btn-discover"><span class="disc-icon">↗</span>Descubra Agora</button>
+    </div>
+  </div>
+  <div class="content">
+    <p class="c-head">Eleve seu guarda-roupa com peças ousadas e modernas, criadas para chamar atenção. Cada look é feito para expressar confiança e estilo sem abrir mão de nada.</p>
+    <div class="c-btns">
+      <button class="btn-discover"><span class="disc-icon">↗</span>Descubra Agora</button>
+    </div>
+  </div>
+</div>
+
+
+<div class="flash" id="flash"></div>
+<button class="arrow" id="al">&#8592;</button>
+<button class="arrow" id="ar">&#8594;</button>
+<div class="dots">
+  <div class="dot on" onclick="go(0)"></div>
+  <div class="dot"    onclick="go(1)"></div>
+  <div class="dot"    onclick="go(2)"></div>
+</div>
+<div class="env-lbl" id="lbl">Céu</div>
+<div class="prog" id="prog"></div>
+
+<script>
+// ── CANVAS ──────────────────────────────────────────────
+const cv = document.getElementById('fx');
+const cx = cv.getContext('2d');
+let W, H;
+function resize(){ W = cv.width = cv.offsetWidth; H = cv.height = cv.offsetHeight; }
+resize();
+window.addEventListener('resize', resize);
+
+const rnd = (a,b) => a + Math.random()*(b-a);
+const ri  = (a,b) => Math.floor(rnd(a,b));
+
+let pts = [], cxAlpha = 1, scene = 0, fadingPts = false;
+
+// ════════════════════════════════════════════════
+// GALAXY — spiral drifts slowly left
+// ════════════════════════════════════════════════
+const G = { rot:0, ox:.72, oy:.44, dx:-.00011, built:false, stars:[], spiral:[] };
+
+function buildGalaxy(){
+  if(G.built) return;
+  for(let i=0;i<280;i++) G.stars.push({
+    x:Math.random(), y:Math.random()*.9,
+    r:rnd(.3,1.8), ba:rnd(.1,.88), ph:rnd(0,6.28), fr:rnd(.3,2.1)
+  });
+  for(let arm=0;arm<2;arm++){
+    const base=arm*Math.PI;
+    for(let j=0;j<500;j++){
+      const t=j/500, r=t*.4, ang=base+t*Math.PI*3.8+rnd(-.3,.3), sp=t*.038*rnd(-1,1);
+      G.spiral.push({ r, ang, sp, sz:rnd(.35,1.85), a:(1-t*.5)*rnd(.28,.9),
+        col:Math.random()<.62?0:Math.random()<.5?1:2 });
+    }
+  }
+  G.built=true;
+}
+
+function drawGalaxy(alpha){
+  if(!G.built||alpha<=.003) return;
+  G.rot+=.000155; G.ox+=G.dx;
+  if(G.ox<-.4) G.ox=1.4;
+  const gx=W*G.ox, gy=H*G.oy, sc=Math.min(W,H)*1.08;
+  cx.save();
+  // Core nebula
+  let g=cx.createRadialGradient(gx,gy,0,gx,gy,sc*.34);
+  g.addColorStop(0,`rgba(148,88,255,${.25*alpha})`);
+  g.addColorStop(.45,`rgba(52,36,158,${.1*alpha})`);
+  g.addColorStop(1,'rgba(0,0,0,0)');
+  cx.fillStyle=g; cx.beginPath(); cx.arc(gx,gy,sc*.34,0,Math.PI*2); cx.fill();
+  // Moon
+  const mx=W*.73, my=H*.09;
+  g=cx.createRadialGradient(mx,my,0,mx,my,115);
+  g.addColorStop(0,`rgba(192,175,255,${.23*alpha})`);
+  g.addColorStop(.55,`rgba(115,95,218,${.08*alpha})`);
+  g.addColorStop(1,'rgba(0,0,0,0)');
+  cx.fillStyle=g; cx.beginPath(); cx.arc(mx,my,115,0,Math.PI*2); cx.fill();
+  cx.fillStyle=`rgba(226,220,255,${.8*alpha*cxAlpha})`; cx.beginPath(); cx.arc(mx,my,21,0,Math.PI*2); cx.fill();
+  cx.fillStyle=`rgba(172,165,208,${.85*alpha*cxAlpha})`; cx.beginPath(); cx.arc(mx+5,my-3,19,0,Math.PI*2); cx.fill();
+  // Spiral arms
+  cx.globalCompositeOperation='lighter';
+  for(const p of G.spiral){
+    const ang=p.ang+G.rot;
+    const x=gx+Math.cos(ang)*p.r*sc+Math.sin(ang+Math.PI*.5)*p.sp*sc;
+    const y=gy+Math.sin(ang)*p.r*sc*.42+Math.cos(ang+Math.PI*.5)*p.sp*sc*.42;
+    const a=p.a*alpha*cxAlpha; if(a<=.004) continue;
+    const rgb=p.col===0?'206,210,255':p.col===1?'85,135,255':'162,82,255';
+    cx.fillStyle=`rgba(${rgb},${a})`; cx.beginPath(); cx.arc(x,y,p.sz,0,Math.PI*2); cx.fill();
+  }
+  cx.globalCompositeOperation='source-over';
+  // Stars
+  const t=Date.now()*.001;
+  for(const s of G.stars){
+    const a=s.ba*(.38+.62*(Math.sin(s.ph+t*s.fr)*.5+.5))*alpha*cxAlpha;
+    cx.fillStyle=`rgba(255,255,255,${a})`; cx.beginPath(); cx.arc(s.x*W,s.y*H,s.r,0,Math.PI*2); cx.fill();
+  }
+  cx.restore();
+}
+
+// ════════════════════════════════════════════════
+// CLOUD LAYERS — three parallax depths
+// ════════════════════════════════════════════════
+const CLOUDS=[];
+let cloudsReady=false;
+
+function buildClouds(){
+  if(cloudsReady) return;
+  for(let i=0;i<5;i++) CLOUDS.push({x:rnd(-250,W+250),y:H*rnd(.04,.44),w:rnd(310,570),h:rnd(62,128),vx:rnd(.055,.13),a:rnd(.09,.19)});
+  for(let i=0;i<6;i++) CLOUDS.push({x:rnd(-210,W+210),y:H*rnd(.08,.6), w:rnd(175,355),h:rnd(36,85), vx:rnd(.17,.31),a:rnd(.18,.34)});
+  for(let i=0;i<4;i++) CLOUDS.push({x:rnd(-110,W+110),y:H*rnd(.1,.7),  w:rnd(90,215), h:rnd(22,55), vx:rnd(.36,.56),a:rnd(.12,.22)});
+  cloudsReady=true;
+}
+
+function updateDrawClouds(alpha){
+  if(!cloudsReady||alpha<=.003) return;
+  for(const c of CLOUDS){
+    c.x+=c.vx; if(c.x>W+c.w/2+130) c.x=-c.w/2-130;
+    const ea=c.a*alpha*cxAlpha; if(ea<=.003) continue;
+    const gr=cx.createRadialGradient(c.x,c.y,0,c.x,c.y,Math.max(c.w,c.h)*.58);
+    gr.addColorStop(0,`rgba(248,252,255,${ea})`);
+    gr.addColorStop(.55,`rgba(238,248,255,${ea*.5})`);
+    gr.addColorStop(1,'rgba(225,244,255,0)');
+    cx.fillStyle=gr; cx.beginPath(); cx.ellipse(c.x,c.y,c.w*.5,c.h*.5,0,0,Math.PI*2); cx.fill();
+    cx.fillStyle=`rgba(255,255,255,${ea*.32})`; cx.beginPath(); cx.ellipse(c.x+c.w*.22,c.y-c.h*.16,c.w*.27,c.h*.37,0,0,Math.PI*2); cx.fill();
+  }
+}
+
+function drawSunRays(alpha){
+  if(alpha<=.003) return;
+  const sx=W*.76,sy=H*-.04,t=Date.now()*.00065;
+  cx.save();
+  for(let i=0;i<9;i++){
+    const ang=Math.PI*.27+i/9*Math.PI*.46;
+    const a=.022*(.36+.64*Math.sin(t+i*.62))*alpha*cxAlpha;
+    if(a<=.001) continue;
+    cx.fillStyle=`rgba(255,245,192,${a})`;
+    cx.beginPath(); cx.moveTo(sx,sy);
+    cx.lineTo(sx+Math.cos(ang-.044)*H*1.65,sy+Math.sin(ang-.044)*H*1.65);
+    cx.lineTo(sx+Math.cos(ang+.044)*H*1.65,sy+Math.sin(ang+.044)*H*1.65);
+    cx.closePath(); cx.fill();
+  }
+  cx.restore();
+}
+
+// ════════════════════════════════════════════════
+// PARTICLE SPAWNERS
+// ════════════════════════════════════════════════
+
+// Sky — floating motes + bottom mist
+function spawnSky(){
+  if(Math.random()<.055) pts.push({t:'mote',x:rnd(0,W),y:rnd(0,H*.7),
+    vx:rnd(-.25,.25),vy:rnd(-.25,-.05),r:rnd(1.2,2.8),
+    a:rnd(.25,.55),l:1,ld:rnd(.002,.004),col:[255,245,200]});
+  if(Math.random()<.012) pts.push({t:'cloud',x:-rnd(80,200),y:H*rnd(.7,.96),
+    w:rnd(120,280),h:rnd(28,75),vx:rnd(.12,.22),vy:0,
+    a:rnd(.07,.15),l:1,ld:0,col:[255,252,245]});
+}
+
+// Night — neon motes + shooting stars
+let starsReady=false;
+function buildNightStars(){
+  if(starsReady) return;
+  for(let i=0;i<180;i++) pts.push({t:'star',x:rnd(0,W),y:rnd(0,H*.78),
+    r:rnd(.4,1.8),ba:rnd(.1,.85),ph:rnd(0,6.28),fr:rnd(.4,2.2),l:1});
+  starsReady=true;
+}
+function spawnNight(){
+  if(Math.random()<.055){
+    const col=Math.random()<.5?[110,80,255]:[255,80,200];
+    pts.push({t:'mote',x:rnd(0,W),y:rnd(0,H),vx:rnd(-.3,.3),vy:rnd(-.15,-.03),
+      r:rnd(.8,1.8),a:rnd(.3,.6),l:1,ld:rnd(.0015,.003),col});
+  }
+  if(Math.random()<.008) pts.push({t:'shoot',x:rnd(0,W*.6),y:H*rnd(.03,.25),
+    vx:rnd(5,9),vy:rnd(1.5,4),len:rnd(90,150),a:1,l:1,ld:.022,col:[210,190,255]});
+}
+
+// Fire — embers from photo crater + smoke + ash
+function spawnFire(){
+  if(Math.random()<.42){
+    const hue=Math.random();
+    const col=[255,Math.floor(hue<.5?50+hue*200:80+Math.random()*120),0];
+    pts.push({t:'ember',x:W*rnd(.15,.85),y:H,
+      vx:rnd(-1.5,1.5),vy:rnd(-1.8,-.8)-1.5,
+      tx:rnd(-.12,.12),r:rnd(1.5,3.5),a:rnd(.7,1),l:1,ld:rnd(.007,.016),col});
+  }
+  if(Math.random()<.07) pts.push({t:'mote',x:rnd(0,W),y:H*rnd(0,.4),
+    vx:rnd(-.5,.5),vy:rnd(.2,.55),r:rnd(.6,1.6),a:rnd(.2,.45),l:1,ld:rnd(.003,.005),col:[130,105,80]});
+  if(Math.random()<.02) pts.push({t:'cloud',x:W*rnd(.2,.8),y:H,
+    w:rnd(70,180),h:rnd(60,140),vx:rnd(-.25,.25),vy:rnd(-.5,-.25),
+    a:rnd(.035,.09),l:1,ld:rnd(.0015,.003),col:[55,35,25]});
+}
+
+// ════════════════════════════════════════════════
+// DRAW
+// ════════════════════════════════════════════════
+function drawPt(p){
+  if(p.l<=0) return;
+  const ea=(p.a||1)*p.l*cxAlpha;
+  if(ea<=0) return;
+
+  if(p.t==='cloud'){
+    const [r,g,b]=p.col||[255,255,255];
+    const mx=p.x+p.w/2, my=p.y;
+    const gr=cx.createRadialGradient(mx,my,0,mx,my,Math.max(p.w,p.h)*.55);
+    gr.addColorStop(0,`rgba(${r},${g},${b},${ea})`); gr.addColorStop(1,`rgba(${r},${g},${b},0)`);
+    cx.fillStyle=gr; cx.beginPath(); cx.ellipse(mx,my,p.w/2,p.h/2,0,0,Math.PI*2); cx.fill();
+
+  }else if(p.t==='mote'){
+    const [r,g,b]=p.col;
+    const gr=cx.createRadialGradient(p.x,p.y,0,p.x,p.y,p.r*3.5);
+    gr.addColorStop(0,`rgba(${r},${g},${b},${ea})`); gr.addColorStop(1,`rgba(${r},${g},${b},0)`);
+    cx.fillStyle=gr; cx.beginPath(); cx.arc(p.x,p.y,p.r*3.5,0,Math.PI*2); cx.fill();
+
+  }else if(p.t==='star'){
+    const a2=p.ba*(0.35+0.65*(Math.sin(p.ph+Date.now()*p.fr*.001)*.5+.5))*cxAlpha;
+    if(a2<=0) return;
+    cx.fillStyle=`rgba(255,255,255,${a2})`; cx.beginPath(); cx.arc(p.x,p.y,p.r,0,Math.PI*2); cx.fill();
+
+  }else if(p.t==='shoot'){
+    const [r,g,b]=p.col;
+    cx.save(); cx.globalAlpha=ea;
+    const gr=cx.createLinearGradient(p.x,p.y,p.x-p.vx*(p.len/5),p.y-p.vy*(p.len/5));
+    gr.addColorStop(0,`rgb(${r},${g},${b})`); gr.addColorStop(1,`rgba(${r},${g},${b},0)`);
+    cx.strokeStyle=gr; cx.lineWidth=1.8;
+    cx.beginPath(); cx.moveTo(p.x,p.y); cx.lineTo(p.x-p.vx*(p.len/5),p.y-p.vy*(p.len/5)); cx.stroke();
+    cx.restore();
+
+  }else if(p.t==='ember'){
+    const [r,g,b]=p.col;
+    const gr=cx.createRadialGradient(p.x,p.y,0,p.x,p.y,p.r*2.8);
+    gr.addColorStop(0,`rgba(255,255,180,${ea})`);
+    gr.addColorStop(.35,`rgba(${r},${g},${b},${ea*.85})`);
+    gr.addColorStop(1,`rgba(${r},0,0,0)`);
+    cx.fillStyle=gr; cx.beginPath(); cx.arc(p.x,p.y,p.r*2.8,0,Math.PI*2); cx.fill();
+  }
+}
+
+// ════════════════════════════════════════════════
+// UPDATE
+// ════════════════════════════════════════════════
+function update(){
+  for(let i=pts.length-1;i>=0;i--){
+    const p=pts[i];
+    switch(p.t){
+      case 'cloud':
+        p.x+=p.vx; p.y+=p.vy; if(p.ld) p.l-=p.ld;
+        if(p.x>W+400||p.l<=0) pts.splice(i,1); break;
+      case 'mote':
+        p.x+=p.vx; p.y+=p.vy; p.l-=p.ld;
+        if(p.l<=0||p.x<-20||p.x>W+20||p.y<-20||p.y>H+20) pts.splice(i,1); break;
+      case 'star':
+        if(scene!==1) p.l-=.025; if(p.l<=0) pts.splice(i,1); break;
+      case 'shoot':
+        p.x+=p.vx; p.y+=p.vy; p.l-=p.ld;
+        if(p.x>W||p.y>H||p.l<=0) pts.splice(i,1); break;
+      case 'ember':
+        p.vx+=p.tx+(Math.random()-.5)*.08;
+        p.x+=p.vx; p.y+=p.vy; p.vy+=.018; p.l-=p.ld;
+        if(p.y<-20||p.l<=0) pts.splice(i,1); break;
+    }
+  }
+}
+
+// ════════════════════════════════════════════════
+// TICK
+// ════════════════════════════════════════════════
+function tick(){
+  cx.clearRect(0,0,W,H);
+  const a=cxAlpha;
+  if(!fadingPts){
+    if(scene===0){
+      buildClouds(); drawSunRays(a); updateDrawClouds(a); spawnSky();
+    }else if(scene===1){
+      buildGalaxy(); drawGalaxy(a); buildNightStars(); spawnNight();
+    }else{
+      spawnFire();
+    }
+  }else{
+    if(scene===0){ updateDrawClouds(a); }
+    else if(scene===1){ drawGalaxy(a); }
+  }
+  update();
+  for(const p of pts) drawPt(p);
+  requestAnimationFrame(tick);
+}
+
+// ════════════════════════════════════════════════
+// SCENE CONTROLLER
+// ════════════════════════════════════════════════
+const DUR    = 4000;
+const LABELS = ['Céu','Noite','Vulcão'];
+
+const bgs   = document.querySelectorAll('.bg');
+const ligs  = document.querySelectorAll('.light');
+const mods  = document.querySelectorAll('.model');
+const cnts  = document.querySelectorAll('.content');
+const dots  = document.querySelectorAll('.dot');
+const lbl   = document.getElementById('lbl');
+const prog  = document.getElementById('prog');
+const flash = document.getElementById('flash');
+
+let cur=0, locked=false, timer;
+
+function go(idx){
+  if(locked) return;
+  idx=((idx%3)+3)%3;
+  if(idx===cur) return;
+  locked=true;
+
+  flash.style.transition='opacity .28s';
+  flash.style.opacity='.3';
+  setTimeout(()=>{ flash.style.transition='opacity .7s'; flash.style.opacity='0'; },280);
+
+  fadingPts=true;
+  let fa=1;
+  const fi=setInterval(()=>{
+    fa-=.06; cxAlpha=Math.max(0,fa);
+    if(fa<=0){
+      clearInterval(fi);
+      pts=[]; starsReady=false;
+      fadingPts=false;
+      let fb=0;
+      const fo=setInterval(()=>{
+        fb+=.05; cxAlpha=Math.min(1,fb);
+        if(fb>=1) clearInterval(fo);
+      },28);
+    }
+  },28);
+
+  const prev=cur; cur=idx; scene=cur;
+  bgs[prev].classList.remove('on');  bgs[cur].classList.add('on');
+  ligs[prev].classList.remove('on'); ligs[cur].classList.add('on');
+  mods[prev].classList.remove('on'); mods[cur].classList.add('on');
+  cnts[prev].classList.remove('on'); cnts[cur].classList.add('on');
+  dots[prev].classList.remove('on'); dots[cur].classList.add('on');
+  lbl.textContent=LABELS[cur];
+
+  resetTimer();
+  setTimeout(()=>{ locked=false; },1100);
+}
+
+function resetTimer(){
+  clearTimeout(timer);
+  prog.style.transition='none'; prog.style.width='0%';
+  prog.offsetWidth;
+  prog.style.transition=`width ${DUR}ms linear`; prog.style.width='100%';
+  timer=setTimeout(()=>go(cur+1),DUR);
+}
+
+resetTimer();
+tick();
+requestAnimationFrame(()=>requestAnimationFrame(()=>document.body.classList.add('loaded')));
+
+document.getElementById('ar').onclick=()=>go(cur+1);
+document.getElementById('al').onclick=()=>go(cur-1);
+
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'||e.key===' '){e.preventDefault();go(cur+1);}
+  if(e.key==='ArrowLeft') go(cur-1);
+});
+
+let tx0=0;
+document.addEventListener('touchstart',e=>tx0=e.touches[0].clientX,{passive:true});
+document.addEventListener('touchend',e=>{
+  const d=tx0-e.changedTouches[0].clientX;
+  if(Math.abs(d)>50) go(d>0?cur+1:cur-1);
+});
+</script>
+
+<!-- ── SECTION 2 — MARCAS PARCEIRAS ──────────── -->
+<div class="pin-brands">
+<div class="scroll-hint">
+  <span>Rolar</span>
+  <div class="scroll-arrow"></div>
+</div>
+
+<section class="brands-section" id="marcas">
+  <div class="brands-inner">
+
+    <div class="brands-left">
+      <span class="brands-sup fu">Parceiros oficiais</span>
+      <h2 class="brands-heading fu">
+        <span class="bh-line">NOSSAS</span><br>
+        <span class="bh-line">MARCAS</span>
+      </h2>
+      <p class="brands-sub fu">Curadoria das melhores marcas do streetwear contemporâneo. Peças autênticas, estilo sem compromisso.</p>
+    </div>
+
+    <div class="brands-right">
+      <div class="brands-grid">
+        <div class="brand-card fu">
+          <img src="marcas%20que%20trabalha/nike_final.png" alt="Nike">
+          <span class="brand-lbl">Nike</span>
+        </div>
+        <div class="brand-card fu">
+          <img src="marcas%20que%20trabalha/john_john_final.png" alt="John John">
+          <span class="brand-lbl">John John</span>
+        </div>
+        <div class="brand-card fu">
+          <img src="marcas%20que%20trabalha/champion_preto_final.png" alt="Champion">
+          <span class="brand-lbl">Champion</span>
+        </div>
+        <div class="brand-card fu">
+          <img src="marcas%20que%20trabalha/approve_logo_png_transparente_branco.png" alt="Approve">
+          <span class="brand-lbl">Approve</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+</div><!-- /pin-brands -->
+
+<!-- ── SECTION 3 — PRODUTOS ───────────────────── -->
+<section class="products-section" id="colecao">
+
+  <div class="prod-bar">
+    <div class="prod-filters">
+      <button class="pf-btn pf-active" onclick="setFilter(this)">All</button>
+      <button class="pf-btn" onclick="setFilter(this)">Trending</button>
+      <button class="pf-btn" onclick="setFilter(this)">New</button>
+      <button class="pf-btn" onclick="setFilter(this)">Sale</button>
+    </div>
+    <div class="prod-sort">
+      <button class="ps-btn">Sort by
+        <svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <button class="ps-btn">Filter
+        <svg width="14" height="10" viewBox="0 0 14 10" fill="none"><path d="M0 1h14M3 5h8M6 9h2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="prod-grid">
+
+    <!-- masculino 1 -->
+    <div class="prod-card fu">
+      <div class="pc-img">
+        <img src="img/imagem%20com%20fundo%20cinza/produto_12_12_fundo_premium.png" alt="Approve x Corinthians">
+        <button class="pc-cart">Add to cart</button>
+      </div>
+      <span class="pc-style">Masculino</span>
+      <div class="pc-info">
+        <div class="pc-left"><span class="pc-name">Approve x Corinthians</span><span class="pc-sub">Streetwear Esportivo</span></div>
+        <span class="pc-price">R$ 349</span>
+      </div>
+    </div>
+
+    <!-- masculino 2 -->
+    <div class="prod-card fu">
+      <div class="pc-img">
+        <img src="img/imagem%20com%20fundo%20cinza/ChatGPT%20Image%2024%20de%20mai.%20de%202026%2C%2010_42_37.png" alt="Champion Set">
+        <button class="pc-cart">Add to cart</button>
+      </div>
+      <span class="pc-style">Masculino</span>
+      <div class="pc-info">
+        <div class="pc-left"><span class="pc-name">Conjunto Champion</span><span class="pc-sub">Estilo Clássico</span></div>
+        <span class="pc-price">R$ 479</span>
+      </div>
+    </div>
+
+    <!-- masculino 3 — flat lay -->
+    <div class="prod-card fu">
+      <div class="pc-img">
+        <img src="img/imagem%20com%20fundo%20cinza/ChatGPT%20Image%2024%20de%20mai.%20de%202026%2C%2010_44_40.png" alt="NFL x Approve" class="flatlay">
+        <button class="pc-cart">Add to cart</button>
+      </div>
+      <span class="pc-style">Look Completo</span>
+      <div class="pc-info">
+        <div class="pc-left"><span class="pc-name">NFL x Approve</span><span class="pc-sub">Combo Exclusivo</span></div>
+        <span class="pc-price">R$ 529</span>
+      </div>
+    </div>
+
+    <!-- feminino 1 -->
+    <div class="prod-card fu">
+      <div class="pc-img">
+        <img src="img/imagem%20com%20fundo%20cinza/ChatGPT%20Image%2024%20de%20mai.%20de%202026%2C%2010_45_00.png" alt="Crop Tee">
+        <button class="pc-cart">Add to cart</button>
+      </div>
+      <span class="pc-style">Feminino</span>
+      <div class="pc-info">
+        <div class="pc-left"><span class="pc-name">Camiseta Crop</span><span class="pc-sub">Casual Urbano</span></div>
+        <span class="pc-price">R$ 189</span>
+      </div>
+    </div>
+
+    <!-- feminino 2 -->
+    <div class="prod-card fu">
+      <div class="pc-img">
+        <img src="img/imagem%20com%20fundo%20cinza/ChatGPT%20Image%2024%20de%20mai.%20de%202026%2C%2010_45_08.png" alt="Vestido Metálico">
+        <button class="pc-cart">Add to cart</button>
+      </div>
+      <span class="pc-style">Feminino</span>
+      <div class="pc-info">
+        <div class="pc-left"><span class="pc-name">Vestido Metálico</span><span class="pc-sub">Elegância Premium</span></div>
+        <span class="pc-price">R$ 389</span>
+      </div>
+    </div>
+
+    <!-- feminino 3 — flat lay -->
+    <div class="prod-card fu">
+      <div class="pc-img">
+        <img src="img/imagem%20com%20fundo%20cinza/ChatGPT%20Image%2024%20de%20mai.%20de%202026%2C%2010_56_55.png" alt="Approve x Nike" class="flatlay">
+        <button class="pc-cart">Add to cart</button>
+      </div>
+      <span class="pc-style">Look Completo</span>
+      <div class="pc-info">
+        <div class="pc-left"><span class="pc-name">Approve x Nike</span><span class="pc-sub">Conjunto Feminino</span></div>
+        <span class="pc-price">R$ 429</span>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ── SECTION 4 — EDITORIAL ─────────────────── -->
+<section class="editorial-section">
+  <div class="editorial-wrap">
+
+    <!-- card: overflow hidden (clip fundo arredondado) -->
+    <div class="editorial-card fu">
+      <div class="ed-card-photo"></div>
+      <div class="ed-grid"></div>
+      <div class="ed-halo"></div>
+      <div class="editorial-text">
+        <div class="ed-icons">
+          <button class="ed-icon-btn ed-icon-globe" aria-label="Site">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="7.5" stroke="currentColor" stroke-width="1.4"/><ellipse cx="9" cy="9" rx="3.2" ry="7.5" stroke="currentColor" stroke-width="1.4"/><path d="M1.5 9h15" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M2.5 5.5h13M2.5 12.5h13" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+          </button>
+          <button class="ed-icon-btn ed-icon-arrow" aria-label="Ver">↗</button>
+        </div>
+        <h2 class="ed-headline">
+          Vista sua essência,<br>domine sua<br>presença.
+        </h2>
+        <div class="ed-tags">
+          <span class="ed-tag">#EstiloPróprio</span>
+          <span class="ed-tag">#ModaUrbana</span>
+          <span class="ed-tag">#NovoDrop</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- modelo: irmão do card, ancora no wrapper — não é cortado pelo overflow do card -->
+    <div class="editorial-model">
+      <img src="img/png%20das%20imagens/20.png" alt="Look Editorial LS Store">
+    </div>
+
+  </div>
+</section>
+
+<!-- ── SECTION 5 — LOOKS CAROUSEL ───────────── -->
+<section class="looks-section">
+  <div class="looks-track-wrap" id="looksWrap">
+    <div class="looks-track" id="looksTrack">
+
+      <div class="lk-pair">
+        <div class="lk-pair-img">
+          <img src="img/imagem%20com%20fundo%20cinza/produto_12_12_fundo_premium.png" alt="">
+          <div class="lk-photo-info">
+            <span class="lk-photo-name">Approve x Corinthians</span>
+            <span class="lk-photo-tag">Streetwear Esportivo</span>
+          </div>
+        </div>
+        <div class="lk-pair-text">
+          <div>
+            <div class="lk-stars">★★★★★</div>
+            <p class="lk-quote">"Roupa incrível, qualidade top. Virou o look favorito da minha temporada."</p>
+          </div>
+          <div class="lk-author">
+            <span class="lk-name">Carlos M.</span>
+            <span class="lk-coll">Dezembro 2025</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="lk-pair">
+        <div class="lk-pair-img">
+          <img src="img/imagem%20com%20fundo%20cinza/ChatGPT%20Image%2024%20de%20mai.%20de%202026%2C%2010_42_37.png" alt="">
+          <div class="lk-photo-info">
+            <span class="lk-photo-name">Conjunto Champion</span>
+            <span class="lk-photo-tag">Estilo Clássico</span>
+          </div>
+        </div>
+        <div class="lk-pair-text">
+          <div>
+            <div class="lk-stars">★★★★★</div>
+            <p class="lk-quote">"Chegou rápido, qualidade superou a expectativa. O tecido é leve mas mantém o estilo."</p>
+          </div>
+          <div class="lk-author">
+            <span class="lk-name">Ana L.</span>
+            <span class="lk-coll">Dezembro 2025</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="lk-pair">
+        <div class="lk-pair-img">
+          <img src="img/imagem%20com%20fundo%20cinza/ChatGPT%20Image%2024%20de%20mai.%20de%202026%2C%2010_45_08.png" alt="">
+          <div class="lk-photo-info">
+            <span class="lk-photo-name">Vestido Metálico</span>
+            <span class="lk-photo-tag">Elegância Premium</span>
+          </div>
+        </div>
+        <div class="lk-pair-text">
+          <div>
+            <div class="lk-stars">★★★★★</div>
+            <p class="lk-quote">"Estilo diferente de tudo que já vi. Cada peça parece feita pra chamar atenção."</p>
+          </div>
+          <div class="lk-author">
+            <span class="lk-name">Bruno S.</span>
+            <span class="lk-coll">Dezembro 2025</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="lk-pair">
+        <div class="lk-pair-img">
+          <img src="img/imagem%20com%20fundo%20cinza/ChatGPT%20Image%2024%20de%20mai.%20de%202026%2C%2010_56_55.png" alt="">
+          <div class="lk-photo-info">
+            <span class="lk-photo-name">Approve x Nike</span>
+            <span class="lk-photo-tag">Conjunto Feminino</span>
+          </div>
+        </div>
+        <div class="lk-pair-text">
+          <div>
+            <div class="lk-stars">★★★★★</div>
+            <p class="lk-quote">"Me surpreendeu demais. A combinação é perfeita, recebo elogios toda vez que uso."</p>
+          </div>
+          <div class="lk-author">
+            <span class="lk-name">Juliana R.</span>
+            <span class="lk-coll">Dezembro 2025</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ── FOOTER ─────────────────────────────────── -->
+<footer class="site-footer">
+  <div class="footer-top">
+    <div class="footer-cols">
+      <div class="footer-col">
+        <span class="footer-col-title">Categorias</span>
+        <ul>
+          <li><a href="#">Masculino</a></li>
+          <li><a href="#">Feminino</a></li>
+          <li><a href="#">Acessórios</a></li>
+          <li><a href="#">Coleções</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <span class="footer-col-title">Sobre</span>
+        <ul>
+          <li><a href="#">Nossa História</a></li>
+          <li><a href="#">Lookbook</a></li>
+          <li><a href="#">Imprensa</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <span class="footer-col-title">Suporte</span>
+        <ul>
+          <li><a href="#">FAQ</a></li>
+          <li><a href="#">Envio & Trocas</a></li>
+          <li><a href="#">Contato</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-social">
+      <a href="#" aria-label="WhatsApp">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.558 4.126 1.535 5.858L.057 23.5l5.797-1.522A11.93 11.93 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.885 0-3.655-.52-5.17-1.426l-.371-.22-3.841 1.007 1.027-3.748-.241-.386A9.97 9.97 0 0 1 2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg>
+      </a>
+      <a href="#" aria-label="Facebook">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+      </a>
+      <a href="#" aria-label="Instagram">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+      </a>
+    </div>
+  </div>
+
+  <div class="footer-wordmark">LS Store</div>
+
+  <div class="footer-bottom">
+    <span class="footer-copy">© 2025 LS Store — Todos os direitos reservados</span>
+    <span class="footer-copy">Feito com estilo</span>
+  </div>
+</footer>
+
+<script>
+// Fade-up animation on scroll into view
+(function(){
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if(e.isIntersecting) { e.target.classList.add('vis'); obs.unobserve(e.target); } });
+  }, { threshold: 0.15 });
+  document.querySelectorAll('.fu').forEach(el => obs.observe(el));
+})();
+
+// Fade page-1 fixed UI when scrolled past hero
+(function(){
+  const ui = [
+    document.querySelector('.dots'),
+    document.querySelector('.env-lbl'),
+    document.querySelector('.prog'),
+    document.querySelector('.scroll-hint')
+  ].filter(Boolean);
+  ui.forEach(el => el.classList.add('page1-ui'));
+
+  const hint = document.querySelector('.scroll-hint');
+
+  window.addEventListener('scroll', () => {
+    const past = window.scrollY > window.innerHeight * 0.4;
+    ui.forEach(el => el.style.opacity = past ? '0' : '');
+    if(hint) hint.style.pointerEvents = past ? 'none' : '';
+  }, {passive:true});
+})();
+
+function setFilter(btn){
+  document.querySelectorAll('.pf-btn').forEach(b => b.classList.remove('pf-active'));
+  btn.classList.add('pf-active');
+}
+</script>
+
+<script>
+(function(){
+  const track = document.getElementById('looksTrack');
+  const originals = Array.from(track.children);
+  originals.forEach(card => track.appendChild(card.cloneNode(true)));
+
+  let pos = 0;
+  const speed = 0.6;
+
+  function tick(){
+    pos += speed;
+    const half = track.scrollWidth / 2;
+    if(pos >= half) pos -= half;
+    track.style.transform = `translate3d(-${pos}px,0,0)`;
+    requestAnimationFrame(tick);
+  }
+
+  requestAnimationFrame(tick);
+})();
+</script>
+
+</body>
+</html>
