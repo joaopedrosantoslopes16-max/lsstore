@@ -342,6 +342,9 @@ nav{position:fixed;top:0;left:0;right:0;z-index:600;display:flex;align-items:cen
 }
 .pc-img img.flatlay{object-fit:contain;object-position:center;background:#0d0d0d;padding:10px}
 
+/* modelo duplicado só para mobile — oculto no desktop */
+.ed-model-inner{display:none}
+
 /* ── EDITORIAL SECTION ───────────────────────── */
 .editorial-section{
   background:#080808;
@@ -582,6 +585,151 @@ nav{position:fixed;top:0;left:0;right:0;z-index:600;display:flex;align-items:cen
   animation:scrollPulse 2s ease-in-out infinite;
 }
 @keyframes scrollPulse{0%,100%{opacity:.3;transform:scaleY(.6);transform-origin:top}50%{opacity:1;transform:scaleY(1);transform-origin:top}}
+
+/* ══════════════════════════════════════════════════
+   RESPONSIVE — tablet ≤1024px / mobile ≤767px
+   Apenas media queries. CSS desktop intacto acima.
+   ══════════════════════════════════════════════════ */
+
+/* ── Telas muito pequenas ≤390px (Galaxy Z Fold, iPhone SE) ── */
+@media(max-width:390px){
+  nav{padding:16px 14px}
+  .content{left:14px;right:14px;bottom:72px}
+  .c-head{font-size:13px}
+  .dots{left:14px;bottom:20px}
+  .brands-section{padding:52px 14px 44px}
+  .products-section{padding:0 14px 44px}
+  .pf-btn{padding:7px 10px;font-size:9px;letter-spacing:1px}
+  .prod-grid{gap:8px}
+  .editorial-section{padding:32px 12px 52px}
+  .editorial-card{min-height:440px}
+  .looks-section{padding:44px 0 60px}
+  .looks-track-wrap{padding:0 14px}
+  .looks-header{padding:0 14px;margin-bottom:18px}
+  .lk-pair{width:88vw}
+  .lk-pair-text{padding:20px 16px}
+  .lk-quote{font-size:13px}
+  .footer-top{padding:32px 14px 20px}
+  .footer-cols{gap:20px 16px}
+  .footer-wordmark{font-size:clamp(38px,14vw,90px)}
+  .footer-bottom{padding:12px 14px 20px}
+}
+
+/* ── Surface Duo e telas entre 480–540px ── */
+@media(min-width:480px) and (max-width:767px){
+  .lk-pair{width:65vw}
+  .prod-grid{grid-template-columns:repeat(2,1fr)}
+}
+
+/* ── Nest Hub Max (1280px) — acima do breakpoint tablet ── */
+@media(min-width:1025px) and (max-width:1280px){
+  .brands-section{padding:0 60px}
+  .products-section{padding:0 60px 100px}
+  .editorial-section{padding:100px 60px 140px}
+  .looks-track-wrap{padding:0 60px}
+  .looks-header{padding:0 60px}
+  .footer-top{padding:72px 60px 60px}
+  .footer-bottom{padding:20px 60px 28px}
+}
+
+@media(max-width:1024px){
+  nav{padding:22px 32px}
+  .model{top:auto;bottom:0;height:calc(100% - 80px);max-width:78%;object-position:bottom center}
+  .model-night{height:calc(100% - 80px);max-width:78%}
+  .headline{left:32px;font-size:clamp(44px,7vw,120px)}
+  .stats{right:32px}
+  .content{left:32px}
+  .dots{left:32px}
+  .env-lbl{right:32px}
+  .brands-section{padding:0 32px}
+  .brands-inner{gap:40px;padding:56px 0}
+  .brands-heading{font-size:clamp(40px,5.5vw,90px)}
+  .products-section{padding:0 32px 80px}
+  .prod-grid{grid-template-columns:repeat(2,1fr)}
+  /* editorial tablet — mantém efeito 3D, texto acima do modelo */
+  .editorial-section{padding:80px 32px 100px}
+  .editorial-model{left:68%;width:58%;top:-100px;z-index:4}
+  .editorial-text{padding:44px 48px;z-index:15}
+  .ed-icons{z-index:16}
+  .ed-headline{max-width:50%;font-size:clamp(24px,3vw,50px)}
+  .looks-header{padding:0 32px}
+  .looks-track-wrap{padding:0 32px}
+  .lk-pair{width:520px}
+  .footer-top{padding:56px 32px 48px}
+  .footer-bottom{padding:20px 32px 28px}
+  .footer-cols{gap:52px}
+}
+
+@media(max-width:767px){
+  nav{padding:18px 20px}
+
+  /* hero */
+  .headline{display:none}
+  .word{display:none}
+  .stats{display:none}
+  .env-lbl{display:none}
+  .scroll-hint{display:none}
+  .model{top:70px;bottom:auto;width:100%;height:155%;max-width:none;object-fit:cover;object-position:top center}
+  .model-night{top:auto;bottom:0;width:100%;height:85%;max-width:none;object-fit:cover;object-position:top center}
+  .content{left:20px;right:20px;bottom:80px;max-width:none}
+  .c-head{font-size:14px;margin-bottom:20px}
+  .dots{left:20px;bottom:24px}
+
+  /* brands: remove sticky, empilha */
+  .pin-brands{height:auto}
+  .brands-section{position:relative;top:auto;height:auto;padding:64px 20px 56px;align-items:flex-start}
+  .brands-inner{flex-direction:column;gap:32px;padding:0;max-width:none;width:100%}
+  .brands-left{flex:none;width:100%}
+  .brands-heading{font-size:clamp(38px,11vw,72px)}
+  .brands-sub{max-width:none}
+  .brands-right{width:100%}
+  .brands-grid{grid-template-columns:repeat(2,1fr)}
+  .brand-card{padding:20px}
+  .brand-card img{max-width:88px;max-height:34px}
+
+  /* products */
+  .products-section{padding:0 20px 56px;margin-top:0}
+  .prod-bar{flex-direction:column;align-items:flex-start;gap:14px;padding:28px 0 22px}
+  .prod-filters{flex-wrap:wrap;gap:4px}
+  .pf-btn{padding:8px 14px;font-size:10px}
+  .prod-sort{display:none}
+  .prod-grid{grid-template-columns:repeat(2,1fr);gap:10px}
+  .pc-cart{font-size:9px;padding:11px 18px}
+
+  /* editorial */
+  .editorial-section{padding:40px 16px 60px}
+  .editorial-wrap{overflow:hidden}
+  .editorial-card{min-height:500px}
+  .ed-tags{display:none}
+  .editorial-model{display:none}
+  .ed-model-inner{display:block;position:absolute;bottom:0;left:50%;width:135%;transform:translateX(-50%);z-index:5;pointer-events:none}
+  .ed-model-inner img{width:100%;height:auto;object-fit:contain;object-position:center bottom;mix-blend-mode:normal;display:block;filter:brightness(1.25) contrast(1.05) saturate(1.1)}
+  .ed-halo{opacity:0.2}
+  .ed-card-photo{opacity:0.6}
+  .editorial-text{padding:32px 22px;z-index:10;justify-content:flex-end;background:linear-gradient(to top,rgba(0,0,0,.65) 0%,rgba(0,0,0,.2) 45%,transparent 100%)}
+  .ed-headline{max-width:100%;font-size:clamp(24px,7.5vw,38px);margin-bottom:0}
+  .ed-icons{left:22px;top:22px;z-index:11}
+
+  /* carousel */
+  .looks-section{padding:60px 0 72px}
+  .looks-header{padding:0 20px;margin-bottom:28px}
+  .looks-track-wrap{padding:0 20px}
+  .lk-pair{width:calc(80vw);height:auto;min-height:0}
+  .lk-pair-img{display:none}
+  .lk-pair-text{padding:24px 20px;width:100%}
+  .lk-stars{font-size:14px;margin-bottom:14px}
+  .lk-quote{font-size:14px}
+  .lk-author{margin-top:20px;padding-top:16px}
+  .lk-name{font-size:12px}
+  .lk-coll{font-size:9px}
+
+  /* footer */
+  .footer-top{flex-direction:column-reverse;gap:28px;padding:40px 20px 24px}
+  .footer-cols{display:grid;grid-template-columns:1fr 1fr;gap:28px 24px}
+  .footer-social{justify-content:flex-start}
+  .footer-wordmark{font-size:clamp(46px,16vw,110px);margin-top:-20px;letter-spacing:-2px}
+  .footer-bottom{flex-direction:column;align-items:center;gap:8px;padding:16px 20px 24px}
+}
 </style>
 </head>
 <body>
@@ -1071,16 +1219,16 @@ document.addEventListener('touchend',e=>{
 
   <div class="prod-bar">
     <div class="prod-filters">
-      <button class="pf-btn pf-active" onclick="setFilter(this)">All</button>
-      <button class="pf-btn" onclick="setFilter(this)">Trending</button>
-      <button class="pf-btn" onclick="setFilter(this)">New</button>
-      <button class="pf-btn" onclick="setFilter(this)">Sale</button>
+      <button class="pf-btn pf-active" onclick="setFilter(this)">Todos</button>
+      <button class="pf-btn" onclick="setFilter(this)">Em Alta</button>
+      <button class="pf-btn" onclick="setFilter(this)">Novidades</button>
+      <button class="pf-btn" onclick="setFilter(this)">Promoção</button>
     </div>
     <div class="prod-sort">
-      <button class="ps-btn">Sort by
+      <button class="ps-btn">Ordenar
         <svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </button>
-      <button class="ps-btn">Filter
+      <button class="ps-btn">Filtrar
         <svg width="14" height="10" viewBox="0 0 14 10" fill="none"><path d="M0 1h14M3 5h8M6 9h2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
       </button>
     </div>
@@ -1178,6 +1326,9 @@ document.addEventListener('touchend',e=>{
       <div class="ed-card-photo"></div>
       <div class="ed-grid"></div>
       <div class="ed-halo"></div>
+      <div class="ed-model-inner">
+        <img src="img/png%20das%20imagens/20.png" alt="Look Editorial LS Store">
+      </div>
       <div class="editorial-text">
         <div class="ed-icons">
           <button class="ed-icon-btn ed-icon-globe" aria-label="Site">
@@ -1206,6 +1357,12 @@ document.addEventListener('touchend',e=>{
 
 <!-- ── SECTION 5 — LOOKS CAROUSEL ───────────── -->
 <section class="looks-section">
+  <div class="looks-header">
+    <div class="looks-nav">
+      <button class="lk-arrow" id="lkPrev" aria-label="Anterior">&#8592;</button>
+      <button class="lk-arrow" id="lkNext" aria-label="Próximo">&#8594;</button>
+    </div>
+  </div>
   <div class="looks-track-wrap" id="looksWrap">
     <div class="looks-track" id="looksTrack">
 
@@ -1384,16 +1541,39 @@ function setFilter(btn){
   const originals = Array.from(track.children);
   originals.forEach(card => track.appendChild(card.cloneNode(true)));
 
+  const cardW = () => (track.children[0] ? track.children[0].offsetWidth + 16 : 656);
   let pos = 0;
   const speed = 0.6;
+  let paused = false;
+  let resumeTimer = null;
 
   function tick(){
-    pos += speed;
-    const half = track.scrollWidth / 2;
-    if(pos >= half) pos -= half;
-    track.style.transform = `translate3d(-${pos}px,0,0)`;
+    if(!paused){
+      pos += speed;
+      const half = track.scrollWidth / 2;
+      if(pos >= half) pos -= half;
+      track.style.transform = `translate3d(-${pos}px,0,0)`;
+    }
     requestAnimationFrame(tick);
   }
+
+  function pauseAndResume(){
+    paused = true;
+    clearTimeout(resumeTimer);
+    resumeTimer = setTimeout(() => { paused = false; }, 3000);
+  }
+
+  function navigate(dir){
+    pauseAndResume();
+    pos += dir * cardW();
+    const half = track.scrollWidth / 2;
+    if(pos < 0) pos += half;
+    if(pos >= half) pos -= half;
+    track.style.transform = `translate3d(-${pos}px,0,0)`;
+  }
+
+  document.getElementById('lkPrev').addEventListener('click', () => navigate(-1));
+  document.getElementById('lkNext').addEventListener('click', () => navigate(1));
 
   requestAnimationFrame(tick);
 })();
